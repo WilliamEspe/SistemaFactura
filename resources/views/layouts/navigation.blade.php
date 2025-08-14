@@ -64,6 +64,19 @@
             <a href="{{ route('facturas.index') }}" class="sidebar-link">🧾 <span class="ml-2">Facturas</span></a>
         @endif
 
+        @if(Auth::user()->roles->contains('nombre', 'Cliente'))
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section">Cliente</div>
+            <a href="{{ route('cliente.facturas') }}" class="sidebar-link">💰 <span class="ml-2">Mis Facturas</span></a>
+        @endif
+
+        @if(Auth::user()->roles->contains('nombre', 'Administrador') || Auth::user()->roles->contains('nombre', 'Pagos'))
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section">Validación de Pagos</div>
+            <a href="{{ route('pagos.validacion.index') }}" class="sidebar-link">💳 <span class="ml-2">Pagos Pendientes</span></a>
+            <a href="{{ route('pagos.validacion.historial') }}" class="sidebar-link">📋 <span class="ml-2">Historial de Pagos</span></a>
+        @endif
+
         @if(Auth::user()->roles->contains('nombre', 'Administrador'))
             <div class="sidebar-divider"></div>
             <div class="sidebar-section">Administración</div>

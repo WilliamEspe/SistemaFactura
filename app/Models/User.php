@@ -2,43 +2,46 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Spatie\Permission\Traits\HasRoles;
+use App\Models\Role as CustomRole;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class User extends Authenticatable
+
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property bool|null $activo
+ * @property string|null $motivo_bloqueo
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Illuminate\Database\Eloquent\Collection $roles
+ */
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -47,9 +50,9 @@ class User extends Authenticatable
         ];
     }
 
-    public function roles()
+    public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id');
+        return $this->belongsToMany(CustomRole::class, 'role_user', 'user_id', 'role_id');
     }
 
     public function facturas()
@@ -57,8 +60,27 @@ class User extends Authenticatable
         return $this->hasMany(Factura::class);
     }
 
+    /**
+     * Relación con el cliente asociado (si el usuario tiene rol de cliente)
+     */
+    public function cliente()
+    {
+        return $this->hasOne(Cliente::class);
+    }
+
     public function hasRole($roleName)
     {
+        // Si recibe un array, verifica si tiene alguno de esos roles
+        if (is_array($roleName)) {
+            foreach ($roleName as $role) {
+                if ($this->roles->contains('nombre', $role)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // Si es un solo rol
         return $this->roles->contains('nombre', $roleName);
     }
 }

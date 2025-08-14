@@ -52,8 +52,21 @@ class UsuarioSeeder extends Seeder
 
         foreach ($usuarios as $data) {
             $usuario = User::firstOrCreate(['email' => $data['email']], $data);
-            $role = Role::where('nombre', 'Ventas')->first();
-            $usuario->roles()->syncWithoutDetaching([$role->id]);
+            
+            // Asignar roles específicos según el email
+            if ($data['email'] === 'ventas@factura.com') {
+                $role = Role::where('nombre', 'Ventas')->first();
+            } elseif ($data['email'] === 'bodega@factura.com') {
+                $role = Role::where('nombre', 'Bodega')->first();
+            } elseif ($data['email'] === 'secretario@factura.com') {
+                $role = Role::where('nombre', 'Secretario')->first();
+            } else {
+                $role = Role::where('nombre', 'Ventas')->first(); // Por defecto
+            }
+            
+            if ($role) {
+                $usuario->roles()->syncWithoutDetaching([$role->id]);
+            }
         }
         
     }

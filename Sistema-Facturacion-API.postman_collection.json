@@ -1,0 +1,1739 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Sistema Facturación API - Laravel 11",
+		"description": "API REST completa para el Sistema de Facturación Segura. Incluye autenticación, gestión de clientes, productos, facturas, pagos y dashboard administrativo.\n\n**Base URL:** http://127.0.0.1:8000/api\n**Autenticación:** Bearer Token\n**Versión:** 1.0.0",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "01 - Autenticación y Estado",
+			"item": [
+				{
+					"name": "GET Status API",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success property\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"API is online\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('online');",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 2000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/status",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"status"
+							]
+						},
+						"description": "Verificar el estado de la API. No requiere autenticación."
+					},
+					"response": [
+						{
+							"name": "200 - API Online",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}/status",
+									"host": [
+										"{{api_url}}"
+									],
+									"path": [
+										"status"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"status\": \"online\",\n    \"version\": \"1.0.0\",\n    \"timestamp\": \"2025-08-14T12:00:00.000000Z\",\n    \"message\": \"API Sistema de Facturación Segura funcionando correctamente\"\n}"
+						}
+					]
+				},
+				{
+					"name": "GET Usuario Autenticado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('name');",
+									"    pm.expect(jsonData.data).to.have.property('email');",
+									"});",
+									"",
+									"pm.test(\"Has roles information\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('roles');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/user",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"user"
+							]
+						},
+						"description": "Obtener información del usuario autenticado con sus roles y permisos."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Test Auth",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/test/auth",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"test",
+								"auth"
+							]
+						},
+						"description": "Verificar autenticación y validez del token."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Test Database",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/test/db",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"test",
+								"db"
+							]
+						},
+						"description": "Verificar conectividad con la base de datos."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para verificar el estado de la API y autenticación."
+		},
+		{
+			"name": "02 - Clientes",
+			"item": [
+				{
+					"name": "GET Listar Clientes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/clientes",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"clientes"
+							]
+						},
+						"description": "Obtener lista de todos los clientes. Requiere rol Administrador o Secretario."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear Cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Cliente created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"});",
+									"",
+									"// Guardar ID del cliente creado para usar en otros requests",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('cliente_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Juan Pérez API\",\n    \"email\": \"juan.api@example.com\",\n    \"telefono\": \"987654321\",\n    \"direccion\": \"Av. Postman 456\"\n}"
+						},
+						"url": {
+							"raw": "{{api_url}}/clientes",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"clientes"
+							]
+						},
+						"description": "Crear un nuevo cliente en el sistema."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Cliente por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/clientes/{{cliente_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"clientes",
+								"{{cliente_id}}"
+							]
+						},
+						"description": "Obtener información de un cliente específico por su ID."
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Actualizar Cliente",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Juan Pérez Actualizado\",\n    \"email\": \"juan.actualizado@example.com\",\n    \"telefono\": \"987654321\",\n    \"direccion\": \"Av. Postman Actualizada 789\"\n}"
+						},
+						"url": {
+							"raw": "{{api_url}}/clientes/{{cliente_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"clientes",
+								"{{cliente_id}}"
+							]
+						},
+						"description": "Actualizar información de un cliente existente."
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE Eliminar Cliente",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/clientes/{{cliente_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"clientes",
+								"{{cliente_id}}"
+							]
+						},
+						"description": "Eliminar un cliente del sistema."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Facturas del Cliente",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/clientes/1/facturas",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"clientes",
+								"1",
+								"facturas"
+							]
+						},
+						"description": "Obtener todas las facturas de un cliente específico."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Pagos del Cliente",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/clientes/1/pagos",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"clientes",
+								"1",
+								"pagos"
+							]
+						},
+						"description": "Obtener todos los pagos de un cliente específico."
+					},
+					"response": []
+				}
+			],
+			"description": "Gestión completa de clientes - CRUD y consultas relacionadas."
+		},
+		{
+			"name": "03 - Productos",
+			"item": [
+				{
+					"name": "GET Listar Productos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/productos",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"productos"
+							]
+						},
+						"description": "Obtener lista de todos los productos disponibles."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear Producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('producto_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Producto API Test\",\n    \"descripcion\": \"Producto creado desde Postman Collection\",\n    \"precio\": 75.50,\n    \"stock\": 25\n}"
+						},
+						"url": {
+							"raw": "{{api_url}}/productos",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"productos"
+							]
+						},
+						"description": "Crear un nuevo producto en el inventario."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Producto por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/productos/{{producto_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"productos",
+								"{{producto_id}}"
+							]
+						},
+						"description": "Obtener información de un producto específico."
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Actualizar Producto",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Producto API Actualizado\",\n    \"descripcion\": \"Producto actualizado desde Postman\",\n    \"precio\": 89.99,\n    \"stock\": 30\n}"
+						},
+						"url": {
+							"raw": "{{api_url}}/productos/{{producto_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"productos",
+								"{{producto_id}}"
+							]
+						},
+						"description": "Actualizar información de un producto existente."
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE Eliminar Producto",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/productos/{{producto_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"productos",
+								"{{producto_id}}"
+							]
+						},
+						"description": "Eliminar un producto del inventario."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Actualizar Stock",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productos\": [\n        {\"id\": 1, \"cantidad\": 100},\n        {\"id\": 2, \"cantidad\": 50}\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{api_url}}/productos/stock/update",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"productos",
+								"stock",
+								"update"
+							]
+						},
+						"description": "Actualizar stock de múltiples productos de forma masiva."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Stock Bajo",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/productos/stock/bajo",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"productos",
+								"stock",
+								"bajo"
+							]
+						},
+						"description": "Obtener productos con stock bajo (menos de 10 unidades)."
+					},
+					"response": []
+				}
+			],
+			"description": "Gestión completa de productos e inventario."
+		},
+		{
+			"name": "04 - Facturas",
+			"item": [
+				{
+					"name": "GET Listar Facturas",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/facturas",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"facturas"
+							]
+						},
+						"description": "Obtener lista de todas las facturas del sistema."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear Factura",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('factura_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cliente_id\": 1,\n    \"fecha_vencimiento\": \"2025-09-14\",\n    \"observaciones\": \"Factura creada desde API Postman\",\n    \"detalles\": [\n        {\n            \"producto_id\": 1,\n            \"cantidad\": 2,\n            \"precio_unitario\": 50.00\n        },\n        {\n            \"producto_id\": 2,\n            \"cantidad\": 1,\n            \"precio_unitario\": 25.50\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{api_url}}/facturas",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"facturas"
+							]
+						},
+						"description": "Crear una nueva factura con sus detalles."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Factura por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/facturas/{{factura_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"facturas",
+								"{{factura_id}}"
+							]
+						},
+						"description": "Obtener información completa de una factura específica."
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Anular Factura",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/facturas/{{factura_id}}/anular",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"facturas",
+								"{{factura_id}}",
+								"anular"
+							]
+						},
+						"description": "Anular una factura existente. Requiere permisos administrativos."
+					},
+					"response": []
+				},
+				{
+					"name": "GET PDF Factura",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/pdf"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/facturas/1/pdf",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"facturas",
+								"1",
+								"pdf"
+							]
+						},
+						"description": "Generar y descargar PDF de una factura específica."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Enviar Email",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/facturas/1/enviar-email",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"facturas",
+								"1",
+								"enviar-email"
+							]
+						},
+						"description": "Enviar factura por correo electrónico al cliente."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Stats Resumen",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/facturas/stats/resumen",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"facturas",
+								"stats",
+								"resumen"
+							]
+						},
+						"description": "Obtener estadísticas resumidas de todas las facturas."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Stats por Período",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/facturas/stats/por-periodo?fecha_inicio=2025-08-01&fecha_fin=2025-08-31",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"facturas",
+								"stats",
+								"por-periodo"
+							],
+							"query": [
+								{
+									"key": "fecha_inicio",
+									"value": "2025-08-01"
+								},
+								{
+									"key": "fecha_fin",
+									"value": "2025-08-31"
+								}
+							]
+						},
+						"description": "Obtener estadísticas de facturas en un período específico."
+					},
+					"response": []
+				}
+			],
+			"description": "Gestión completa de facturas y estadísticas."
+		},
+		{
+			"name": "05 - Pagos",
+			"item": [
+				{
+					"name": "GET Listar Pagos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/pagos",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"pagos"
+							]
+						},
+						"description": "Obtener lista de todos los pagos registrados."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Crear Pago",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('pago_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"factura_id\": 1,\n    \"monto\": 100.00,\n    \"tipo_pago\": \"tarjeta\",\n    \"numero_transaccion\": \"POSTMAN123456\",\n    \"observaciones\": \"Pago procesado desde API Postman\"\n}"
+						},
+						"url": {
+							"raw": "{{api_url}}/pagos",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"pagos"
+							]
+						},
+						"description": "Registrar un nuevo pago para una factura específica."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Pago por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/pagos/{{pago_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"pagos",
+								"{{pago_id}}"
+							]
+						},
+						"description": "Obtener información de un pago específico."
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Aprobar Pago",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/pagos/{{pago_id}}/aprobar",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"pagos",
+								"{{pago_id}}",
+								"aprobar"
+							]
+						},
+						"description": "Aprobar un pago pendiente. Requiere permisos administrativos."
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Rechazar Pago",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"motivo_rechazo\": \"Datos de transacción inválidos o insuficientes\"\n}"
+						},
+						"url": {
+							"raw": "{{api_url}}/pagos/{{pago_id}}/rechazar",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"pagos",
+								"{{pago_id}}",
+								"rechazar"
+							]
+						},
+						"description": "Rechazar un pago con motivo especificado."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Pagos Pendientes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/pagos/pendientes",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"pagos",
+								"pendientes"
+							]
+						},
+						"description": "Obtener lista de pagos pendientes de aprobación."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Stats Pagos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/pagos/stats/resumen",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"pagos",
+								"stats",
+								"resumen"
+							]
+						},
+						"description": "Obtener estadísticas resumidas de pagos."
+					},
+					"response": []
+				}
+			],
+			"description": "Gestión completa de pagos y aprobaciones."
+		},
+		{
+			"name": "06 - Mi Cuenta (Clientes)",
+			"item": [
+				{
+					"name": "GET Mis Facturas",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/mi-cuenta/facturas",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"mi-cuenta",
+								"facturas"
+							]
+						},
+						"description": "Obtener facturas del cliente autenticado."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Mis Pagos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/mi-cuenta/pagos",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"mi-cuenta",
+								"pagos"
+							]
+						},
+						"description": "Obtener pagos del cliente autenticado."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Mi Perfil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/mi-cuenta/perfil",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"mi-cuenta",
+								"perfil"
+							]
+						},
+						"description": "Obtener perfil del cliente autenticado."
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Actualizar Mi Perfil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Cliente Actualizado\",\n    \"telefono\": \"987654321\",\n    \"direccion\": \"Nueva Dirección 456\"\n}"
+						},
+						"url": {
+							"raw": "{{api_url}}/mi-cuenta/perfil",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"mi-cuenta",
+								"perfil"
+							]
+						},
+						"description": "Actualizar perfil del cliente autenticado."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints específicos para clientes autenticados."
+		},
+		{
+			"name": "07 - Dashboard",
+			"item": [
+				{
+					"name": "GET Resumen Dashboard",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has dashboard data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('facturas');",
+									"    pm.expect(jsonData.data).to.have.property('pagos');",
+									"    pm.expect(jsonData.data).to.have.property('clientes');",
+									"    pm.expect(jsonData.data).to.have.property('productos');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/dashboard/resumen",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"dashboard",
+								"resumen"
+							]
+						},
+						"description": "Obtener estadísticas generales del dashboard administrativo."
+					},
+					"response": [
+						{
+							"name": "200 - Dashboard Stats",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}/dashboard/resumen",
+									"host": [
+										"{{api_url}}"
+									],
+									"path": [
+										"dashboard",
+										"resumen"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": {\n        \"facturas\": {\n            \"total\": 150,\n            \"pagadas\": 120,\n            \"pendientes\": 25,\n            \"anuladas\": 5\n        },\n        \"pagos\": {\n            \"total\": 200,\n            \"aprobados\": 180,\n            \"pendientes\": 15,\n            \"rechazados\": 5\n        },\n        \"clientes\": {\n            \"total\": 50,\n            \"activos\": 35\n        },\n        \"productos\": {\n            \"total\": 100,\n            \"stock_bajo\": 8\n        }\n    },\n    \"message\": \"Estadísticas del dashboard obtenidas exitosamente\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoints para dashboard administrativo y estadísticas."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Pre-request script global",
+					"pm.request.headers.add({",
+					"    key: 'Accept',",
+					"    value: 'application/json'",
+					"});",
+					"",
+					"if (pm.request.method !== 'GET') {",
+					"    pm.request.headers.add({",
+					"        key: 'Content-Type',",
+					"        value: 'application/json'",
+					"    });",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Test script global",
+					"pm.test(\"Response time is acceptable\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+					"});",
+					"",
+					"pm.test(\"Response has required headers\", function () {",
+					"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "api_url",
+			"value": "{{base_url}}/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "1a0a721157cc913ef245c6b239a7061cfd32cb18",
+			"type": "string",
+			"description": "Token de acceso para Cliente Test"
+		},
+		{
+			"key": "cliente_id",
+			"value": "",
+			"type": "string",
+			"description": "ID del cliente creado dinámicamente"
+		},
+		{
+			"key": "producto_id",
+			"value": "",
+			"type": "string",
+			"description": "ID del producto creado dinámicamente"
+		},
+		{
+			"key": "factura_id",
+			"value": "",
+			"type": "string",
+			"description": "ID de la factura creada dinámicamente"
+		},
+		{
+			"key": "pago_id",
+			"value": "",
+			"type": "string",
+			"description": "ID del pago creado dinámicamente"
+		}
+	]
+}

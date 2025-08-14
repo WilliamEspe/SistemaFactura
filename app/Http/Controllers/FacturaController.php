@@ -17,9 +17,48 @@ use App\Mail\FacturaNotificacion;
 
 class FacturaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $facturas = Factura::with('cliente', 'detalles.producto')->get();
+        $query = Factura::with(['cliente', 'detalles.producto', 'pagos']);
+
+        // Aplicar búsqueda si existe
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('id', 'LIKE', "%{$search}%")
+                  ->orWhereHas('cliente', function($q) use ($search) {
+                      $q->where('nombre', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        // Aplicar filtro por estado si existe
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado);
+        }
+
+        // Aplicar filtro por fecha si existe
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('created_at', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('created_at', '<=', $request->fecha_hasta);
+        }
+
+        // Ordenamiento
+        $sortBy = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
+        
+        if (in_array($sortBy, ['id', 'total', 'estado', 'created_at'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $facturas = $query->paginate(15)->appends($request->query());
+        
         return view('facturas.index', [
             'facturas' => $facturas,
             'roles' => Auth::user()->roles->pluck('nombre'),
@@ -45,14 +84,18 @@ class FacturaController extends Controller
 
         DB::beginTransaction();
         try {
+            /** @var Factura $factura */
             $factura = Factura::create([
-                'cliente_id' => $request->cliente_id,
+                'cliente_id' => $request->input('cliente_id'),
                 'user_id' => Auth::id(),
+                'created_by' => Auth::id(),
+                'estado' => 'pendiente_pago', // Cambio aquí: de 'pendiente' a 'pendiente_pago'
                 'total' => 0,
             ]);
 
             $total = 0;
-            foreach ($request->productos as $item) {
+            foreach ($request->input('productos', []) as $item) {
+                /** @var Producto $producto */
                 $producto = Producto::findOrFail($item['producto_id']);
 
                 if ($producto->stock < $item['cantidad']) {
@@ -73,6 +116,8 @@ class FacturaController extends Controller
             }
 
             $factura->update(['total' => $total]);
+
+            $factura->load('cliente');
 
             Auditoria::create([
                 'user_id' => Auth::id(),
@@ -109,6 +154,9 @@ class FacturaController extends Controller
         //
     }
 
+    /**
+     * @param Factura $factura
+     */
     public function anular(Factura $factura)
     {
         if ($factura->anulada) {
@@ -118,6 +166,7 @@ class FacturaController extends Controller
         DB::beginTransaction();
         try {
             foreach ($factura->detalles as $detalle) {
+                /** @var FacturaDetalle $detalle */
                 $detalle->producto->increment('stock', $detalle->cantidad);
             }
 
@@ -138,6 +187,9 @@ class FacturaController extends Controller
         }
     }
 
+    /**
+     * @param Factura $factura
+     */
     public function descargarPDF(Factura $factura)
     {
         $factura->load('cliente', 'detalles.producto');
@@ -145,6 +197,9 @@ class FacturaController extends Controller
         return $pdf->download('factura_' . $factura->id . '.pdf');
     }
 
+    /**
+     * @param Factura $factura
+     */
     public function enviarPDF(Factura $factura)
     {
         $factura->load('cliente', 'detalles.producto');
@@ -165,8 +220,12 @@ class FacturaController extends Controller
         return back()->with('success', 'Factura enviada a: ' . $factura->cliente->email);
     }
 
+    /**
+     * @param Factura $factura
+     */
     public function notificar(Factura $factura)
     {
+        /** @var Cliente $cliente */
         $cliente = $factura->cliente;
 
         if (!$cliente->email_verified_at) {

@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('roles', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre')->unique(); // Ej: Admin, Bodega, Ventas
-            $table->timestamps();
+        Schema::table('personal_access_tokens', function (Blueprint $table) {
+            //
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('roles');
+        Schema::table('personal_access_tokens', function (Blueprint $table) {
+            //
+        });
     }
 };

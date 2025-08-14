@@ -1,0 +1,230 @@
+{
+  "info": {
+    "name": "Sistema Facturación API",
+    "description": "API para gestionar facturas y clientes del sistema de facturación segura",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{API_TOKEN}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "API_TOKEN",
+      "value": "REEMPLAZA_CON_TU_TOKEN",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Clientes",
+      "item": [
+        {
+          "name": "Listar Clientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clientes?page=1&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["clientes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clientes/1?include_facturas=true",
+              "host": ["{{base_url}}"],
+              "path": ["clientes", "1"],
+              "query": [
+                {
+                  "key": "include_facturas",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Facturas de Cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clientes/1/facturas?page=1&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["clientes", "1", "facturas"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Facturas",
+      "item": [
+        {
+          "name": "Listar Facturas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/facturas?page=1&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["facturas"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                },
+                {
+                  "key": "cliente_id",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "fecha_desde",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "fecha_hasta",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Factura",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/facturas/1",
+              "host": ["{{base_url}}"],
+              "path": ["facturas", "1"]
+            }
+          }
+        },
+        {
+          "name": "Crear Factura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": 1,\n  \"productos\": [\n    {\n      \"producto_id\": 1,\n      \"cantidad\": 2\n    },\n    {\n      \"producto_id\": 2,\n      \"cantidad\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/facturas",
+              "host": ["{{base_url}}"],
+              "path": ["facturas"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Verificar Usuario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user",
+              "host": ["{{base_url}}"],
+              "path": ["user"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

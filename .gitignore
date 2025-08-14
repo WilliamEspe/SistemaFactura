@@ -22,3 +22,10 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Ignorar todos los .md
+*.md
+
+# Exceptuar el README.md
+!README.md
+

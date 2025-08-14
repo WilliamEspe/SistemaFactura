@@ -13,9 +13,43 @@ class ProductoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $productos = Producto::all();
+        // Si es una petición de API, devolver todos los productos
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $productos = Producto::orderBy('nombre')->get();
+            return response()->json([
+                'success' => true,
+                'message' => 'Productos obtenidos exitosamente',
+                'data' => $productos
+            ]);
+        }
+        
+        // Para peticiones web, aplicar paginación y búsqueda
+        $query = Producto::query();
+
+        // Aplicar búsqueda si existe
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nombre', 'LIKE', "%{$search}%")
+                  ->orWhere('descripcion', 'LIKE', "%{$search}%")
+                  ->orWhere('codigo', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Aplicar ordenamiento
+        $sortBy = $request->get('sort', 'nombre');
+        $sortDirection = $request->get('direction', 'asc');
+        
+        if (in_array($sortBy, ['nombre', 'precio', 'stock', 'created_at'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('nombre', 'asc');
+        }
+
+        $productos = $query->paginate(15)->appends($request->query());
+        
         return view('productos.index', compact('productos'));
     }
 
@@ -41,7 +75,7 @@ class ProductoController extends Controller
         Auditoria::create([
             'user_id' => Auth::id(),
             'accion' => 'Crear Producto',
-            'descripcion' => "Producto {$request->nombre} creado.",
+            'descripcion' => "Producto {$request->input('nombre')} creado.",
             'modulo' => 'Productos',
         ]);
 
@@ -110,13 +144,13 @@ class ProductoController extends Controller
                     'confirmacion' => 'accepted'
                 ]);
 
-                $producto->motivo_eliminacion = $request->motivo_eliminacion;
+                $producto->motivo_eliminacion = $request->input('motivo_eliminacion');
                 $producto->delete();
 
                 Auditoria::create([
                     'user_id' => Auth::id(),
                     'accion' => 'Eliminar Producto',
-                    'descripcion' => "Producto {$producto->nombre} movido a papelera. Motivo: {$request->motivo_eliminacion}",
+                    'descripcion' => "Producto {$producto->nombre} movido a papelera. Motivo: {$request->input('motivo_eliminacion')}",
                     'modulo' => 'Productos',
                 ]);
 
@@ -129,13 +163,14 @@ class ProductoController extends Controller
                     'motivo_restauracion' => 'required|string|max:255',
                 ]);
 
+                /** @var Producto $producto */
                 $producto = Producto::onlyTrashed()->findOrFail($id);
                 $producto->restore();
 
                 Auditoria::create([
                     'user_id' => Auth::id(),
                     'accion' => 'Restaurar Producto',
-                    'descripcion' => "Producto {$producto->nombre} restaurado. Motivo: {$request->motivo_restauracion}",
+                    'descripcion' => "Producto {$producto->nombre} restaurado. Motivo: {$request->input('motivo_restauracion')}",
                     'modulo' => 'Productos',
                 ]);
 
@@ -149,12 +184,14 @@ class ProductoController extends Controller
                     'confirmacion' => 'accepted'
                 ]);
 
+                /** @var \App\Models\User $usuarioAuth */
                 $usuarioAuth = Auth::user();
 
-                if (!Hash::check($request->password, $usuarioAuth->password)) {
+                if (!Hash::check($request->input('password'), $usuarioAuth->password)) {
                     return back()->withErrors(['password' => 'Contraseña incorrecta.']);
                 }
 
+                /** @var Producto $producto */
                 $producto = Producto::onlyTrashed()->findOrFail($id);
                 $nombre = $producto->nombre;
                 $producto->forceDelete();
@@ -169,15 +206,38 @@ class ProductoController extends Controller
                 return back()->with('success', 'Producto eliminado permanentemente.');
             }
 
-            public function papelera()
+            public function papelera(Request $request)
             {
-                $productos = Producto::onlyTrashed()->get();
+                $query = Producto::onlyTrashed();
+
+                // Aplicar búsqueda si existe
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function($q) use ($search) {
+                        $q->where('nombre', 'LIKE', "%{$search}%")
+                          ->orWhere('descripcion', 'LIKE', "%{$search}%")
+                          ->orWhere('codigo', 'LIKE', "%{$search}%");
+                    });
+                }
+
+                $productos = $query->paginate(15)->appends($request->query());
                 return view('productos.papelera', compact('productos'));
             }
 
-            public function auditoria()
+            public function auditoria(Request $request)
             {
-                $logs = Auditoria::where('modulo', 'Productos')->latest()->paginate(10);
+                $query = Auditoria::where('modulo', 'Productos');
+
+                // Aplicar búsqueda si existe
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function($q) use ($search) {
+                        $q->where('accion', 'LIKE', "%{$search}%")
+                          ->orWhere('descripcion', 'LIKE', "%{$search}%");
+                    });
+                }
+
+                $logs = $query->latest()->paginate(15)->appends($request->query());
                 return view('auditoria.index', compact('logs'));
             }
     

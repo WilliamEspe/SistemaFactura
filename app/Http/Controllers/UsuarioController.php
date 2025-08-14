@@ -10,16 +10,36 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class UsuarioController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $usuarios = User::with('roles')->get();
-        return view('usuarios.index', compact('usuarios'));
+        $query = User::with(['roles', 'tokens' => function($query) {
+            $query->where('name', 'LIKE', '%API%')->latest();
+        }]);
+
+        // Aplicar búsqueda si existe
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $usuarios = $query->paginate(10)->appends($request->query());
+        
+        // Obtener todos los tokens para la sección de tokens
+        $tokens = PersonalAccessToken::with('tokenable')
+            ->latest()
+            ->get();
+        
+        return view('usuarios.index', compact('usuarios', 'tokens'));
     }
 
     /**
@@ -27,7 +47,9 @@ class UsuarioController extends Controller
      */
     public function create()
     {
-        return view('usuarios.create');
+        /** @var string $viewName */
+        $viewName = 'usuarios.create';
+        return view($viewName);
     }
 
     /**
@@ -71,7 +93,9 @@ class UsuarioController extends Controller
      */
     public function edit(User $usuario)
     {
-        return view('usuarios.edit', compact('usuario'));
+        /** @var string $viewName */
+        $viewName = 'usuarios.edit';
+        return view($viewName, compact('usuario'));
     }
 
     /**
@@ -131,6 +155,13 @@ class UsuarioController extends Controller
 
         // Obtener los nombres de los nuevos roles
         $rolesAsignados = Role::whereIn('id', $request->roles)->pluck('nombre')->toArray();
+        
+        // Prevenir asignación del rol "Cliente" desde la gestión de usuarios
+        if (in_array('Cliente', $rolesAsignados)) {
+            return back()->withErrors([
+                'roles' => 'El rol "Cliente" no puede ser asignado manualmente. Los clientes se crean automáticamente desde el módulo de Clientes.'
+            ]);
+        }
 
         // Sincronizar roles
         $usuario->roles()->sync($request->roles);
@@ -259,15 +290,129 @@ class UsuarioController extends Controller
 
         return back()->with('success', 'Usuario eliminado permanentemente.');
     }
-    public function papelera()
+    public function papelera(Request $request)
     {
-        $usuarios = User::onlyTrashed()->get();
+        $query = User::onlyTrashed();
+
+        // Aplicar búsqueda si existe
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $usuarios = $query->paginate(15)->appends($request->query());
         return view('usuarios.papelera', compact('usuarios'));
     }
 
-    public function auditoria()
+    public function auditoria(Request $request)
     {
-        $logs = Auditoria::latest()->paginate(10);
+        $query = Auditoria::query();
+
+        // Aplicar búsqueda si existe
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('accion', 'LIKE', "%{$search}%")
+                  ->orWhere('descripcion', 'LIKE', "%{$search}%")
+                  ->orWhere('modulo', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Aplicar filtro por módulo si existe
+        if ($request->filled('modulo')) {
+            $query->where('modulo', $request->modulo);
+        }
+
+        // Aplicar filtro por fecha si existe
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('created_at', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('created_at', '<=', $request->fecha_hasta);
+        }
+
+        $logs = $query->with('user')->latest()->paginate(15)->appends($request->query());
         return view('auditoria.index', compact('logs'));
+    }
+
+    public function crearTokenAccesso(Request $request)
+    {
+        $request->validate([
+            'usuario' => 'required|exists:users,id',
+            'token_name' => 'required|string|max:255',
+        ]);
+
+        $user = User::findOrFail($request->input('usuario'));
+        $tokenName = $request->input('token_name');
+        
+        // Crear token
+        $token = $user->createToken($tokenName);
+        $plainTextToken = $token->plainTextToken;
+        
+        // Guardar el token completo en la nueva columna si existe
+        try {
+            $token->accessToken->update([
+                'plain_text_token' => $plainTextToken
+            ]);
+        } catch (\Exception $e) {
+            // Si la columna no existe, continuamos normalmente
+            Log::info('Columna plain_text_token no disponible, continuando...');
+        }
+
+        // Registrar auditoría
+        Auditoria::create([
+            'user_id' => Auth::id(),
+            'accion' => 'Crear Token Usuario API',
+            'descripcion' => "Token '{$tokenName}' creado para usuario {$user->name} ({$user->email})",
+            'modulo' => 'Usuarios',
+        ]);
+        
+        // Log para debugging
+        Log::info('Token API creado para usuario:', [
+            'usuario_id' => $user->id,
+            'usuario_email' => $user->email,
+            'token_name' => $tokenName,
+            'created_by' => Auth::user()->email
+        ]);
+        
+        return redirect()->route('usuarios.index')
+            ->with('success', 'Token de acceso API creado correctamente.')
+            ->with('nuevo_token', [
+                'nombre' => $tokenName,
+                'usuario' => $user->name,
+                'email' => $user->email,
+                'token' => $plainTextToken
+            ]);
+    }
+
+    /**
+     * Revocar token de un usuario
+     */
+    public function revocarToken(Request $request, $tokenId)
+    {
+        $token = \Laravel\Sanctum\PersonalAccessToken::findOrFail($tokenId);
+        $usuario = $token->tokenable;
+
+        // Verificar que el token pertenezca a un usuario (no cliente)
+        if (!$usuario instanceof User) {
+            return back()->withErrors(['error' => 'Token no válido']);
+        }
+
+        $tokenName = $token->name;
+        $token->delete();
+
+        // Registrar auditoría
+        Auditoria::create([
+            'user_id' => Auth::id(),
+            'accion' => 'Revocar Token Usuario API',
+            'descripcion' => "Token '{$tokenName}' revocado para usuario {$usuario->name}",
+            'modulo' => 'Usuarios',
+        ]);
+
+        return back()->with('success', 'Token revocado exitosamente');
     }
 }
